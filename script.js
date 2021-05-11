@@ -36,9 +36,10 @@ keys.addEventListener('click', (event) => {
 
     //check if target's class selector is 'operator'
     if (target.classList.contains('operator')) {
-        console.log('operator', target.value);
+        handleOperator(target.value);
+        updateDisplay();
         return;
-    }
+    }  
 
 
     //check if target's class selector is 'decimal'
@@ -51,7 +52,8 @@ keys.addEventListener('click', (event) => {
 
     //check if target's class selector is 'all-clear'
     if (target.classList.contains('all-clear')) {
-        console.log('clear', target.value);
+        resetCalculator();
+        updateDisplay();
         return;
     }
 
@@ -67,9 +69,17 @@ keys.addEventListener('click', (event) => {
 
 //display clicked value on the screen
 function inputDigit(digit) {
-    const { displayValue } = calculator;
+    const { displayValue, waitingForSecondOperand } = calculator;
+
+    if(waitingForSecondOperand === true){
+        calculator.displayValue = digit;
+        calculator.waitingForSecondOperand = false;
+    }
+    else{
     // Overwrite `displayValue` if the current value is '0' otherwise append to it
     calculator.displayValue = displayValue === '0' ? digit : displayValue + digit;
+    }
+    console.log(calculator);
 }
 
 
@@ -83,6 +93,7 @@ function inputDecimal(dot) {
     }
 }
 
+
 //Handling operators
 function handleOperator(nextOperator) {
     //Destructure the properties on the calculator object
@@ -90,6 +101,63 @@ function handleOperator(nextOperator) {
 
    // `parseFloat` converts the string contents of `displayValue`
   // to a floating-point number
-    const inputVlaue = parseFloat(displayValue);
+    const inputValue = parseFloat(displayValue);
 
+//when two or more operaotr enterd consecutively,
+//if `operator` exists and `waitingforsecondoperator` is set to true
+//replace value of operator with new operator, and function exits so no calculation is perfomed
+if (operator && calculator.waitingForSecondOperand)  {
+    calculator.operator = nextOperator;
+    console.log(calculator);
+    return;
+  }
+
+ //verify that 'fistOPerand' is null and that the 'inputValue' 
+ //is not a 'NaN' value
+ if(firstOperand === null && !isNaN(inputValue)){
+
+    //update the firstoperand property
+    calculator.firstOperand = inputValue;
+ } 
+ else if (operator) {
+    const result = calculate(firstOperand, inputValue, operator);
+
+    calculator.displayValue = String(result);
+    calculator.firstOperand = result;
+  }
+
+ calculator.waitingForSecondOperand = true;
+ calculator.operator = nextOperator;
+
+ console.log(calculator);
+}
+
+
+// When the user hits an operator after 
+//entering the second operand
+
+function calculate(firstOperand, secondOperand, operator){
+    if(operator === '+'){
+        return firstOperand + secondOperand;
+    } 
+    else if (operator === '-'){
+        return firstOperand - secondOperand;
+    }
+    else if(operator === '*'){
+        return firstOperand * secondOperand;
+    }
+    else if(operator === '/'){
+        return firstOperand / secondOperand;
+    }
+    return secondOperand;
+
+}
+
+//Reset the calculator
+function resetCalculator(){
+    calculator.displayValue = '0';
+    calculator.firstOperand = null;
+    calculator.waitingForSecondOperand = false;
+    calculator.operator = null;
+    console.log(calculator);
 }
